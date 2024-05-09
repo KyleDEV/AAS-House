@@ -1,0 +1,11 @@
+adsLib/
+/api-config.php
+
+# 캐시와 로그
+/cache/
+/logs/
+/tmp/
+
+# OS에서 생성하는 파일
+.DS_Store
+Thumbs.db
