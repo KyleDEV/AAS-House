@@ -1,4 +1,8 @@
+# composer로 의존성관리되는 라이브러리용 폴더
 adsLib/vendor/
+
+# 라이브서버 시크릿 구성 파일
+config.json
 
 # OS에서 생성하는 파일
 .DS_Store

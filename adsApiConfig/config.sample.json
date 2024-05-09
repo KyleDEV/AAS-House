@@ -1,0 +1,7 @@
+{
+    "jwt": {
+        "secret_key": "Your_Private_Text_To_Issue_The_Token_DO_NOT_share_this_to_the_requestor",
+        "user": "requestor",
+        "password": "password_to_request_a_token"
+    }
+}
