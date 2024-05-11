@@ -1,5 +1,7 @@
 <?php
-$title = "AAS";
+
+/**  광고노출페이지. AAS 광고가 노출 웹페이지. 이것은 테스트용 페이지 파일.*/
+$title = "AAS Test";
 $templatePath = "pages/template-1/index.html";
 $iframeExists = file_exists($templatePath);
 ?>
@@ -9,42 +11,30 @@ $iframeExists = file_exists($templatePath);
 <head>
     <title> <?= $title ?> </title>
     <style>
-        .responsive-iframe {
-            position: relative;
-            overflow: hidden;
-            width: 100%;
-            height: 300px;
-        }
-
-        .responsive-iframe iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-
         .test {
             background-color: bisque;
             margin: 0;
             padding: 0;
+        }
+
+        .site-widget-container {
+            height: 250px;
+            background-color: aquamarine;
+            margin: 0;
+            padding: 1em;
         }
     </style>
 </head>
 
 <body>
     <p class="test">-----높이 확인용 -----</p>
-    <?php if ($iframeExists) : ?>
-        <div class="responsive-iframe">
-            <iframe src="<?= $templatePath ?>" frameborder="0" allowfullscreen></iframe>
-        </div>
-    <?php else : ?>
-        <!-- iframe 없이 컨테이너만 보여주기 -->
-        <div class="responsive-iframe">
-            <!-- 비워진 컨테이너, 필요하다면 여기에 대체 콘텐츠나 메시지를 추가 -->
-        </div>
-    <?php endif; ?>
+    <div class="site-widget-container">
+        <div class="aasSpace" style="height: 100%;" data-template="template-1"></div>
+    </div>
     <p class="test">---- 높이 확인용------</p>
+
+    <!-- .aasSpace 요소의  data-template에 맞는 aas 광고페이지를 iframe에 감싸서 .aasSpace의 innerHTL로 넣는 자바스크립트-->
+    <script src="/aas/pages/aasInsertIframe.js"></script>
 </body>
 
 </html>
