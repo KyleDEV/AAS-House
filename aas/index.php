@@ -13,6 +13,7 @@ $iframeExists = file_exists($templatePath);
             position: relative;
             overflow: hidden;
             width: 100%;
+            height: 300px;
         }
 
         .responsive-iframe iframe {
@@ -20,10 +21,11 @@ $iframeExists = file_exists($templatePath);
             top: 0;
             left: 0;
             width: 100%;
-            /* height: 100%; */
+            height: 100%;
         }
+
         .test {
-            background-color:bisque;
+            background-color: bisque;
             margin: 0;
             padding: 0;
         }
