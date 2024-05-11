@@ -1,5 +1,5 @@
 <?php
-require_once '../../adsLib/vendor/autoload.php';
+require_once '../../aasLib/vendor/autoload.php';
 
 use \Firebase\JWT\JWT;
 use Firebase\JWT\Key;
@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST')
 }
 
 // 설정 파일 경로
-$configFile = __DIR__ . '/../../adsApiConfig/config.json';
+$configFile = __DIR__ . '/../../aasApiConfig/config.json';
 
 // 설정 파일 로드
 if (!file_exists($configFile))

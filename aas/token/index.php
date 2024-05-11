@@ -1,11 +1,11 @@
 <?php
 //Composer의 autoloader를 포함.모든 의존성 패키지를 자동으로 로드한다.
-require_once '../../adsLib/vendor/autoload.php';
+require_once '../../aasLib/vendor/autoload.php';
 
 use \Firebase\JWT\JWT;
 
 // 설정 파일 경로
-$configFile = __DIR__ . '/../../adsApiConfig/config.json';
+$configFile = __DIR__ . '/../../aasApiConfig/config.json';
 
 // 키 설정 파일 존재 여부 확인
 if (!file_exists($configFile))
