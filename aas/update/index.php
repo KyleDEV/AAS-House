@@ -1,6 +1,6 @@
 <?php
 require_once '../../aasLib/vendor/autoload.php';
-
+//TODO: 응답코드. 분류별 에러코드 응답하도록 변경하기? http 응답코드로 충분하나?
 use \Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
@@ -69,6 +69,7 @@ else
     echo json_encode(['success' => false, 'message' => 'Failed to update content.']);
 }
 
+//TODO: id에 맞는 폴더/파일/템플릿파일 있는지 확인하고 없으면 예외/응답처리
 function updatePageContent($bannerId, $htmlContent, $cssContent)
 {
     // 초기화: temp 폴더 비우기
@@ -111,7 +112,7 @@ function updatePageContent($bannerId, $htmlContent, $cssContent)
     $doc->saveHTMLFile(__DIR__ . "/../temp/index.html");
 
     // 기존 폴더 비우기 (JS 파일 제외)
-    $files = glob(__DIR__ . "/../template-$bannerId/*");
+    $files = glob(__DIR__ . "/../pages/template-$bannerId/*");
     foreach ($files as $file)
     {
         if (is_file($file) && pathinfo($file, PATHINFO_EXTENSION) !== 'js')
@@ -121,8 +122,8 @@ function updatePageContent($bannerId, $htmlContent, $cssContent)
     }
 
     // 파일을 최종 위치로 이동
-    rename(__DIR__ . "/../temp/index.html", __DIR__ . "/../template-$bannerId/index.html");
-    rename($cssFilePath, __DIR__ . "/../template-$bannerId/style-$bannerId.css");
+    rename(__DIR__ . "/../temp/index.html", __DIR__ . "/../pages/template-$bannerId/index.html");
+    rename($cssFilePath, __DIR__ . "/../pages/template-$bannerId/style-$bannerId.css");
 
     // temp 폴더 비우기
     array_map('unlink', glob(__DIR__ . "/../temp/*"));
@@ -133,6 +134,7 @@ function updatePageContent($bannerId, $htmlContent, $cssContent)
 
 function sanitizeContent($content)
 {
-    // JS 코드 제거 (간단한 예시)
+    // JS 코드 제거
+    //TODO: 테스트 필요
     return preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', "", $content);
 }

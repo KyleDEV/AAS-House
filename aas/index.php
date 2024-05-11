@@ -1,6 +1,6 @@
 <?php
 $title = "AAS";
-$templatePath = "template-1/index.html";
+$templatePath = "pages/template-1/index.html";
 $iframeExists = file_exists($templatePath);
 ?>
 <!DOCTYPE html>
