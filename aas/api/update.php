@@ -72,15 +72,16 @@ else
 //TODO: id에 맞는 폴더/파일/템플릿파일 있는지 확인하고 없으면 예외/응답처리
 function updatePageContent($bannerId, $htmlContent, $cssContent)
 {
-    // css와 html 쿼리스트링으로 붙일 버전번호
-    $timestamp = time();
+    $timestamp = time(); // CSS와 HTML 쿼리스트링으로 붙일 버전 번호
 
     // 초기화: temp 폴더 비우기
     array_map('unlink', glob(__DIR__ . "/../temp/*"));
 
-    // 경로 설정
-    $templatePath = __DIR__ . "/../../aasApiConfig/templates/template-$bannerId.html";
+    // 템플릿 및 자원 파일 경로 설정
+    $templatePath = __DIR__ . "/../../aasApiConfig/templates/template-$bannerId/template-$bannerId.html";
     $cssFilePath = __DIR__ . "/../temp/style-$bannerId.css";
+    $jsFilePath = __DIR__ . "/../../aasApiConfig/templates/template-$bannerId/template-$bannerId.js";
+    $tempJsFilePath = __DIR__ . "/../temp/template-$bannerId.js"; // temp 경로에 저장될 JS 파일 경로
 
     // HTML 콘텐츠와 CSS 콘텐츠의 JS 제거
     $sanitizedHtml = sanitizeContent($htmlContent);
@@ -101,7 +102,6 @@ function updatePageContent($bannerId, $htmlContent, $cssContent)
     $styleLink->setAttribute('href', "style-$bannerId.css?v=$timestamp");
     $head->appendChild($styleLink);
 
-
     // <body> 내용 교체
     $body = $doc->getElementsByTagName('body')->item(0);
     while ($body->hasChildNodes())
@@ -109,31 +109,43 @@ function updatePageContent($bannerId, $htmlContent, $cssContent)
         $body->removeChild($body->firstChild);
     }
     $fragment = $doc->createDocumentFragment();
-    $fragment->appendXML($sanitizedHtml); // HTML 문자열을 프래그먼트에 추가
-    $body->appendChild($fragment); // 프래그먼트를 <body>에 추가
+    $fragment->appendXML($sanitizedHtml);
+    $body->appendChild($fragment);
+
+    // JavaScript 파일이 있는 경우, temp에 복사하고 <body> 끝에 추가
+    if (file_exists($jsFilePath))
+    {
+        copy($jsFilePath, $tempJsFilePath); // 원본 JS 파일을 temp 경로로 복사
+        $scriptLink = $doc->createElement('script');
+        $scriptLink->setAttribute('src', "template-$bannerId.js?v=$timestamp");
+        $body->appendChild($scriptLink);
+    }
 
     // 임시 HTML 파일 저장
     $doc->saveHTMLFile(__DIR__ . "/../temp/index.html");
 
-    // 기존 폴더 비우기 (JS 파일 제외)
+    // 기존 폴더 비우기
     $files = glob(__DIR__ . "/../pages/template-$bannerId/*");
     foreach ($files as $file)
     {
-        if (is_file($file) && pathinfo($file, PATHINFO_EXTENSION) !== 'js')
-        {
-            unlink($file);
-        }
+        unlink($file);
     }
 
     // 파일을 최종 위치로 이동
     rename(__DIR__ . "/../temp/index.html", __DIR__ . "/../pages/template-$bannerId/index.html");
     rename($cssFilePath, __DIR__ . "/../pages/template-$bannerId/style-$bannerId.css");
+    if (file_exists($tempJsFilePath))
+    {
+        rename($tempJsFilePath, __DIR__ . "/../pages/template-$bannerId/template-$bannerId.js");
+    }
 
     // temp 폴더 비우기
     array_map('unlink', glob(__DIR__ . "/../temp/*"));
 
     return true;
 }
+
+
 
 function sanitizeContent($content)
 {
