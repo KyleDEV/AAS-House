@@ -72,6 +72,9 @@ else
 //TODO: id에 맞는 폴더/파일/템플릿파일 있는지 확인하고 없으면 예외/응답처리
 function updatePageContent($bannerId, $htmlContent, $cssContent)
 {
+    // css와 html 쿼리스트링으로 붙일 버전번호
+    $timestamp = time();
+
     // 초기화: temp 폴더 비우기
     array_map('unlink', glob(__DIR__ . "/../temp/*"));
 
@@ -95,8 +98,9 @@ function updatePageContent($bannerId, $htmlContent, $cssContent)
     $styleLink = $doc->createElement('link');
     $styleLink->setAttribute('rel', 'stylesheet');
     $styleLink->setAttribute('type', 'text/css');
-    $styleLink->setAttribute('href', "style-$bannerId.css");
+    $styleLink->setAttribute('href', "style-$bannerId.css?v=$timestamp");
     $head->appendChild($styleLink);
+
 
     // <body> 내용 교체
     $body = $doc->getElementsByTagName('body')->item(0);
@@ -130,7 +134,6 @@ function updatePageContent($bannerId, $htmlContent, $cssContent)
 
     return true;
 }
-
 
 function sanitizeContent($content)
 {

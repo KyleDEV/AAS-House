@@ -34,7 +34,7 @@ $iframeExists = file_exists($templatePath);
     <p class="test">---- 높이 확인용------</p>
 
     <!-- .aasSpace 요소의  data-template에 맞는 aas 광고페이지를 iframe에 감싸서 .aasSpace의 innerHTL로 넣는 자바스크립트-->
-    <script src="/aas/pages/aasInsertIframe.js"></script>
+    <script src="/aas/pages/aasInsertIframe.js?v=202405128"></script>
 </body>
 
 </html>
