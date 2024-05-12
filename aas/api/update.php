@@ -72,35 +72,22 @@ else
 //TODO: id에 맞는 폴더/파일/템플릿파일 있는지 확인하고 없으면 예외/응답처리
 function updatePageContent($bannerId, $htmlContent, $cssContent)
 {
+    $tempDir = __DIR__ . "/../temp/";
+    $adsTemplatesDir = __DIR__ . "/../../aasApiConfig/templates/";
+    $desPagesDir = __DIR__ . "/../pages/";
+    EmptyTempDir($tempDir);
     $timestamp = time(); // CSS와 HTML 쿼리스트링으로 붙일 버전 번호
 
-    // 초기화: temp 폴더 비우기
-    array_map('unlink', glob(__DIR__ . "/../temp/*"));
+    $htmlTemplateFilePath = $adsTemplatesDir . "template-$bannerId/template-$bannerId.html";
 
-    // 템플릿 및 자원 파일 경로 설정
-    $templatePath = __DIR__ . "/../../aasApiConfig/templates/template-$bannerId/template-$bannerId.html";
-    $cssFilePath = __DIR__ . "/../temp/style-$bannerId.css";
-    $jsFilePath = __DIR__ . "/../../aasApiConfig/templates/template-$bannerId/template-$bannerId.js";
-    $tempJsFilePath = __DIR__ . "/../temp/template-$bannerId.js"; // temp 경로에 저장될 JS 파일 경로
+    // HTML 파일 로드
+    $doc = new DOMDocument();
+    @$doc->loadHTMLFile($htmlTemplateFilePath, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+
 
     // HTML 콘텐츠와 CSS 콘텐츠의 JS 제거
     $sanitizedHtml = sanitizeContent($htmlContent);
     $sanitizedCss = sanitizeContent($cssContent);
-
-    // CSS 파일 생성
-    file_put_contents($cssFilePath, $sanitizedCss);
-
-    // HTML 파일 로드
-    $doc = new DOMDocument();
-    @$doc->loadHTMLFile($templatePath, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-
-    // <head>에 CSS 링크 추가
-    $head = $doc->getElementsByTagName('head')->item(0);
-    $styleLink = $doc->createElement('link');
-    $styleLink->setAttribute('rel', 'stylesheet');
-    $styleLink->setAttribute('type', 'text/css');
-    $styleLink->setAttribute('href', "style-$bannerId.css?v=$timestamp");
-    $head->appendChild($styleLink);
 
     // <body> 내용 교체
     $body = $doc->getElementsByTagName('body')->item(0);
@@ -112,40 +99,104 @@ function updatePageContent($bannerId, $htmlContent, $cssContent)
     $fragment->appendXML($sanitizedHtml);
     $body->appendChild($fragment);
 
-    // JavaScript 파일이 있는 경우, temp에 복사하고 <body> 끝에 추가
-    if (file_exists($jsFilePath))
-    {
-        copy($jsFilePath, $tempJsFilePath); // 원본 JS 파일을 temp 경로로 복사
-        $scriptLink = $doc->createElement('script');
-        $scriptLink->setAttribute('src', "template-$bannerId.js?v=$timestamp");
-        $body->appendChild($scriptLink);
-    }
+    // <head>와 <body>에 각각 CSS,JS 링크 추가
+    AppendCssLingToHtmlHead($bannerId, $timestamp, $doc);
+    AppendJsLinkToHtmlBody($bannerId, $timestamp, $doc, $body);
 
-    // 임시 HTML 파일 저장
-    $doc->saveHTMLFile(__DIR__ . "/../temp/index.html");
 
-    // 기존 폴더 비우기
-    $files = glob(__DIR__ . "/../pages/template-$bannerId/*");
-    foreach ($files as $file)
-    {
-        unlink($file);
-    }
+    //Save To Temp
+    SaveCssToTemp($bannerId, $sanitizedCss, $tempDir);
+    copyJsFileToTemp($bannerId, $adsTemplatesDir, $tempDir);
+    SaveHtmlToTemp($doc, $tempDir);
 
-    // 파일을 최종 위치로 이동
-    rename(__DIR__ . "/../temp/index.html", __DIR__ . "/../pages/template-$bannerId/index.html");
-    rename($cssFilePath, __DIR__ . "/../pages/template-$bannerId/style-$bannerId.css");
-    if (file_exists($tempJsFilePath))
-    {
-        rename($tempJsFilePath, __DIR__ . "/../pages/template-$bannerId/template-$bannerId.js");
-    }
 
-    // temp 폴더 비우기
-    array_map('unlink', glob(__DIR__ . "/../temp/*"));
-
+    // 목적지 폴더 비우기
+    EmptyDestinationDir($bannerId, $desPagesDir);
+    // 임시 폴더의 모든 내용을 목적지 폴더로 이동
+    MoveTempToDestination($tempDir, $desPagesDir, $bannerId);
+    // 임시 폴더 비우기
+    EmptyTempDir($tempDir);
     return true;
 }
 
 
+
+
+
+
+
+
+function EmptyTempDir($tempDir)
+{
+    array_map('unlink', glob($tempDir . "*"));
+}
+
+function EmptyDestinationDir($bannerId, $desPagesDir)
+{
+    $files = glob($desPagesDir . "template-$bannerId/*");
+    foreach ($files as $file)
+    {
+        unlink($file);
+    }
+}
+
+function AppendCssLingToHtmlHead($bannerId, $timestamp, $doc)
+{
+    $head = $doc->getElementsByTagName('head')->item(0);
+    $styleLink = $doc->createElement('link');
+    $styleLink->setAttribute('rel', 'stylesheet');
+    $styleLink->setAttribute('type', 'text/css');
+    $styleLink->setAttribute('href', "templateStyle-$bannerId.css?v=$timestamp");
+    $head->appendChild($styleLink);
+}
+
+function SaveCssToTemp($bannerId, $sanitizedCss, $tempDir)
+{
+    $cssFileTempPath = $tempDir . "templateStyle-$bannerId.css";
+
+    // temp폴더에 CSS 파일 생성
+    file_put_contents($cssFileTempPath, $sanitizedCss);
+}
+
+function SaveHtmlToTemp($doc, $tempDir)
+{
+    $doc->saveHTMLFile($tempDir . "index.html");
+}
+
+function MoveTempToDestination($tempDir, $desPagesDir, $bannerId)
+{
+    $sourceFiles = glob($tempDir . '*');
+    foreach ($sourceFiles as $file)
+    {
+        $destPath = $desPagesDir . "template-$bannerId/" . basename($file);
+        if (!file_exists(dirname($destPath)))
+        {
+            mkdir(dirname($destPath), 0777, true);
+        }
+        rename($file, $destPath);
+    }
+}
+
+
+// JavaScript 파일을 Temp 디렉토리로 복사하는 함수
+function copyJsFileToTemp($bannerId, $adsTemplatesDir, $tempDir)
+{
+    $jsFilePath = $adsTemplatesDir . "template-$bannerId/template-$bannerId.js";
+    $jsFileTempPath = $tempDir . "template-$bannerId.js";
+
+    if (file_exists($jsFilePath))
+    {
+        copy($jsFilePath, $jsFileTempPath);
+    }
+}
+
+// HTML 문서에 JavaScript 링크를 추가하는 함수
+function AppendJsLinkToHtmlBody($bannerId, $timestamp, $doc, $body)
+{
+    $scriptLink = $doc->createElement('script');
+    $scriptLink->setAttribute('src', "template-$bannerId.js?v=$timestamp");
+    $body->appendChild($scriptLink);
+}
 
 function sanitizeContent($content)
 {
