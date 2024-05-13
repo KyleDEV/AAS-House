@@ -9,7 +9,7 @@ use Firebase\JWT\Key;
 if ($_SERVER['REQUEST_METHOD'] !== 'POST')
 {
     header('HTTP/1.1 405 Method Not Allowed');
-    echo json_encode(['success' => false, 'message' => 'Invalid request method. Please use POST.']);
+    echo json_encode(['success' => false, 'message' => '요청 메서드가 POST가 아닙니다 (Invalid request method. Please use POST).']);
     exit;
 }
 
@@ -58,11 +58,11 @@ $updateResult = updatePageContent($bannerId, $htmlData, $cssData);
 
 if ($updateResult)
 {
-    echo json_encode(['success' => true, 'message' => 'Content updated successfully.']);
+    echo json_encode(['success' => true, 'message' => '배너가 업데이트 되었습니다(Content updated successfully).']);
 }
 else
 {
-    echo json_encode(['success' => false, 'message' => 'Failed to update content.']);
+    echo json_encode(['success' => false, 'message' => '실패!(Failed to update content).']);
 }
 
 // //TODO: id에 맞는 폴더/파일/템플릿파일 있는지 확인하고 없으면 예외/응답처리

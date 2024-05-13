@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST')
     http_response_code(405);
     echo json_encode([
         'success' => false,
-        'message' => 'Invalid request method. Please use POST.'
+        'message' => '요청 메서드가 POST가 아닙니다 (Invalid request method. Please use POST).'
     ]);
     exit; 
 }
@@ -63,6 +63,6 @@ else
     http_response_code(401);
     echo json_encode([
         'success' => false,
-        'message' => 'Invalid username or password'
+        'message' => 'user/pasword가 틀림(Invalid username or password).'
     ]);
 }

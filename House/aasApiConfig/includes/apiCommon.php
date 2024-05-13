@@ -3,7 +3,7 @@ define('ROOT_DIR', realpath(__DIR__ . '/../../') . '/');
 /** config.json이 저장되어있는 위치 (the dir path of config.json file) */
 define('CONFIG_DIR', ROOT_DIR . 'aasApiConfig/');
 define('ADS_TEMPLATES_DIR', ROOT_DIR . 'aasApiConfig/templates/');
-define('BANNERS_DIR', ROOT_DIR . 'aasApiConfig/banners/');
+define('BANNERS_DIR', ROOT_DIR . 'aas/banners/');
 define('TEMP_DIR', ROOT_DIR . 'aasApiConfig/temp/');
 
 /**
