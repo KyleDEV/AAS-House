@@ -8,7 +8,8 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            padding: 20px;
+            padding: 20px 10% 50px 10%;
+            
         }
 
         textarea,
@@ -59,31 +60,32 @@
     
 
     <script>
-        function convertToJson() {
-            /* 엔터,띄어쓰기 제거 */
-            var bannerId = document.getElementById('bannerIdInput').value;
-            var htmlContent = document.getElementById('htmlInput').value.trim().replace(/\s+/g, ' ');
-            var cssContent = document.getElementById('cssInput').value.trim().replace(/\s+/g, ' ');
+    function convertToJson() {
+        var bannerId = document.getElementById('bannerIdInput').value;
+        var htmlContent = document.getElementById('htmlInput').value.trim().replace(/\s+/g, ' ');
+        var cssContent = document.getElementById('cssInput').value.trim().replace(/\s+/g, ' ');
 
+        var jsonData = {
+            bannerId: bannerId,
+            html: htmlContent,
+            css: cssContent
+        };
 
-            var jsonData = {
-                bannerId: bannerId,
-                html: htmlContent,
-                css: cssContent
-            };
+        var jsonString = JSON.stringify(jsonData, null, 4);
+        document.getElementById('output').textContent = jsonString;
+    }
 
-            var jsonString = JSON.stringify(jsonData, null, 4);
-            document.getElementById('output').textContent = jsonString;
-        }
+    function copyToClipboard() {
+        const outputElement = document.getElementById('output');
+        const text = outputElement.textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Copied to clipboard!');
+            outputElement.textContent = ''; // 클립보드에 복사 후 텍스트 삭제
+        }, (err) => {
+            console.error('Failed to copy: ', err);
+        });
+    }
 
-        function copyToClipboard() {
-            const text = document.getElementById('output').textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                alert('Copied to clipboard!');
-            }, (err) => {
-                console.error('Failed to copy: ', err);
-            });
-        }
     </script>
 </body>
 
