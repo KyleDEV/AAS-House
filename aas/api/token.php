@@ -1,6 +1,7 @@
 <?php
 // Composer의 autoloader를 포함. 모든 의존성 패키지를 자동으로 로드한다.
 require_once '../../aasLib/vendor/autoload.php';
+require_once '../../aasApiConfig/includes/apiCommon.php'; 
 
 use \Firebase\JWT\JWT;
 
@@ -16,17 +17,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST')
     exit; 
 }
 
-// 설정 파일 경로
-$configFile = __DIR__ . '/../../aasApiConfig/config.json';
-
-// 키 설정 파일 존재 여부 확인
-if (!file_exists($configFile))
+// config.json 설정 로드 및 확인
+$config = loadConfig();  
+if (!$config)
 {
-    die("Configuration file not found.");
+    exit;
 }
-
-// 설정 파일 로드
-$config = json_decode(file_get_contents($configFile), true);
 
 // JWT 설정
 $jwtKey = $config['jwt']['secret_key'];
