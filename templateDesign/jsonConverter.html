@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AAS JSON Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        textarea,
+        input {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        textarea {
+            height: 150px;
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        #output {
+            white-space: pre-wrap;
+            /* Maintains whitespace formatting */
+            background: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+    </style>
+</head>
+
+<body>
+    <h1>AAS House - JSON Converter</h1>
+    <p>HTML Element 블럭과 CSS를 요청할 JSON string으로 변환합니다.</p>
+    <div>
+        <label for="bannerIdInput">Banner ID:</label>
+        <input type="number" id="bannerIdInput" value="1">
+    </div>
+    <div>
+        <label for="htmlInput">HTML:</label>
+        <textarea id="htmlInput" placeholder="Enter HTML here..."></textarea>
+    </div>
+    <div>
+        <label for="cssInput">CSS:</label>
+        <textarea id="cssInput" placeholder="Enter CSS here..."></textarea>
+    </div>
+    <button onclick="convertToJson()">JSON으로 변환</button>
+    <h2>JSON Output:</h2>
+    <button onclick="copyToClipboard()">복사</button>
+    <pre id="output"></pre>
+    
+
+    <script>
+        function convertToJson() {
+            /* 엔터,띄어쓰기 제거 */
+            var bannerId = document.getElementById('bannerIdInput').value;
+            var htmlContent = document.getElementById('htmlInput').value.trim().replace(/\s+/g, ' ');
+            var cssContent = document.getElementById('cssInput').value.trim().replace(/\s+/g, ' ');
+
+
+            var jsonData = {
+                bannerId: bannerId,
+                html: htmlContent,
+                css: cssContent
+            };
+
+            var jsonString = JSON.stringify(jsonData, null, 4);
+            document.getElementById('output').textContent = jsonString;
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('output').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard!');
+            }, (err) => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+    </script>
+</body>
+
+</html>
