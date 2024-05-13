@@ -69,7 +69,7 @@ else
     echo json_encode(['success' => false, 'message' => 'Failed to update content.']);
 }
 
-//TODO: id에 맞는 폴더/파일/템플릿파일 있는지 확인하고 없으면 예외/응답처리
+// //TODO: id에 맞는 폴더/파일/템플릿파일 있는지 확인하고 없으면 예외/응답처리
 function updatePageContent($bannerId, $htmlContent, $cssContent)
 {
     $tempDir = __DIR__ . "/../temp/";
@@ -84,40 +84,41 @@ function updatePageContent($bannerId, $htmlContent, $cssContent)
     $doc = new DOMDocument();
     @$doc->loadHTMLFile($htmlTemplateFilePath, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
 
-
     // HTML 콘텐츠와 CSS 콘텐츠의 JS 제거
     $sanitizedHtml = sanitizeContent($htmlContent);
     $sanitizedCss = sanitizeContent($cssContent);
 
-    // <body> 내용 교체
-    $body = $doc->getElementsByTagName('body')->item(0);
-    while ($body->hasChildNodes())
-    {
-        $body->removeChild($body->firstChild);
-    }
-    $fragment = $doc->createDocumentFragment();
-    $fragment->appendXML($sanitizedHtml);
-    $body->appendChild($fragment);
-
     // <head>와 <body>에 각각 CSS,JS 링크 추가
-    AppendCssLingToHtmlHead($bannerId, $timestamp, $doc);
-    AppendJsLinkToHtmlBody($bannerId, $timestamp, $doc, $body);
+    AppendCssLinkToHtmlHead($bannerId, $timestamp, $doc);
+    AppendJsLinkToHtmlBody($bannerId, $timestamp, $doc, $doc->getElementsByTagName('body')->item(0));
 
+    // <body> 내용 교체
+    $newDoc = new DOMDocument();
+    @$newDoc->loadHTML(mb_convert_encoding($sanitizedHtml, 'HTML-ENTITIES', 'UTF-8'));
+    $newBody = $newDoc->getElementsByTagName('body')->item(0);
 
-    //Save To Temp
+    $body = $doc->getElementsByTagName('body')->item(0);
+    foreach ($newBody->childNodes as $node)
+    {
+        $node = $doc->importNode($node, true);
+        $body->appendChild($node);
+    }
+
+    // CSS와 JS 파일 저장 및 HTML 파일 저장
     SaveCssToTemp($bannerId, $sanitizedCss, $tempDir);
     copyJsFileToTemp($bannerId, $adsTemplatesDir, $tempDir);
     SaveHtmlToTemp($doc, $tempDir);
 
-
-    // 목적지 폴더 비우기
+    // 목적지 폴더 비우기 및 임시 폴더의 모든 내용을 목적지 폴더로 이동
     EmptyDestinationDir($bannerId, $desPagesDir);
-    // 임시 폴더의 모든 내용을 목적지 폴더로 이동
     MoveTempToDestination($tempDir, $desPagesDir, $bannerId);
-    // 임시 폴더 비우기
     EmptyTempDir($tempDir);
+
     return true;
 }
+
+
+
 
 
 
@@ -140,7 +141,7 @@ function EmptyDestinationDir($bannerId, $desPagesDir)
     }
 }
 
-function AppendCssLingToHtmlHead($bannerId, $timestamp, $doc)
+function AppendCssLinkToHtmlHead($bannerId, $timestamp, $doc)
 {
     $head = $doc->getElementsByTagName('head')->item(0);
     $styleLink = $doc->createElement('link');
