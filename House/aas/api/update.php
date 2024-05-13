@@ -129,7 +129,7 @@ function EmptyTempDir()
 
 function EmptyDestinationDir($bannerId)
 {
-    $files = glob(PAGES_DIR . "template-$bannerId/*");
+    $files = glob(BANNERS_DIR . "template-$bannerId/*");
     foreach ($files as $file)
     {
         unlink($file);
@@ -164,7 +164,7 @@ function MoveTempToDestination($bannerId)
     $sourceFiles = glob(TEMP_DIR . '*');
     foreach ($sourceFiles as $file)
     {
-        $destPath = PAGES_DIR . "template-$bannerId/" . basename($file);
+        $destPath = BANNERS_DIR . "template-$bannerId/" . basename($file);
         if (!file_exists(dirname($destPath)))
         {
             mkdir(dirname($destPath), 0777, true);
