@@ -3,8 +3,8 @@ define('ROOT_DIR', realpath(__DIR__ . '/../../') . '/');
 /** config.json이 저장되어있는 위치 (the dir path of config.json file) */
 define('CONFIG_DIR', ROOT_DIR . 'aasApiConfig/');
 define('ADS_TEMPLATES_DIR', ROOT_DIR . 'aasApiConfig/templates/');
-define('PAGES_DIR', ROOT_DIR . 'aas/pages/');
-define('TEMP_DIR', ROOT_DIR . 'aas/temp/');
+define('BANNERS_DIR', ROOT_DIR . 'aas/banners/');
+define('TEMP_DIR', ROOT_DIR . 'aasApiConfig/temp/');
 
 /**
  * config.json 파일을 로드하고 응답한다. 파일이 없다면 500에러 응답 후 종료 할 뿐 반환하지 않는다.

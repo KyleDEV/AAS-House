@@ -10,10 +10,9 @@
 $templateId = isset($_GET['templateId']) ? $_GET['templateId'] : null;
 
 // 템플릿 파일 경로 설정
-$templateFilePath = __DIR__ . "/../aas/pages/template-$templateId/index.html";
+$templateFilePath = __DIR__ . "/../aas/banners/template-$templateId/index.html";
 
-// 헤더 설정
-header('Content-Type: application/json');
+
 
 // 파일의 존재 여부 및 수정 시간 체크해서 존재하면 마지막 수정시간을, 존재하지 않으면 현재시간 반환.
 if (file_exists($templateFilePath))
@@ -25,5 +24,7 @@ else
     $lastModified = time();
 }
 
+// 헤더 설정
+header('Content-Type: application/json');
 // 결과를 JSON 형식으로 클라이언트에 응답
 echo json_encode(['version' => $lastModified]);

@@ -11,15 +11,15 @@ function FillAllAasSpacesWithIframes() {
 
     adSpaces.forEach(function (adContainer) {
         // .aasSpace의 data-template에 맞는 경로로 src 설정. 기본값은 template-1 폴더 경로
-        var template = adContainer.dataset.template || 'template-1';
+        var templateId = adContainer.dataset.template || '1';
 
         // 서버에 버전 정보를 요청하는 AJAX 호출
-        fetch(`/aas/api/getTemplateVersion.php?templateId=${template}`)
+        fetch(`/aas/api/getTemplateVersion.php?templateId=${templateId}`)
             .then(response => response.json())
             .then(data => {
                 // 버전 정보를 받아 iframe의 src에 적용
                 var version = data.version;
-                var iframeSrc = `/aas/pages/${template}/index.html?v=${version}`;
+                var iframeSrc = `/aas/banners/template-${templateId}/index.html?v=${version}`;
                 var iframeHTML = `<iframe src="${iframeSrc}" frameborder="0" allowfullscreen="true" style="width: 100%; height: 100%;"></iframe>`;
 
                 // 광고 공간에 iframe 삽입

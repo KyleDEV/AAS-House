@@ -7,7 +7,7 @@
 * aasApiConfig - private key가 있는 설정파일 포함 (비공개)
 * aasLib -  PHP 라이브러리 폴더 (비공개)
 
-디렉토리를 변경하거나 다른 경로를 사용하려면 aasApiConfig/includes/apiCommon.php 의 define() 코드를 수정하여 사용하십시오.
+디렉토리를 변경하거나 다른 경로를 사용하려면 aasApiConfig/includes/apiCommon.php 의 define() 코드와 aasExample/aasInsertIframe.js 의 $iframeSrc 코드를 수정하여 사용하십시오.
 
 ## 써드파티 라이브러리 설치사용 안내
 
