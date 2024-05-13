@@ -46,8 +46,8 @@ catch (Exception $e)
 
 // HTML과 CSS 데이터 처리
 $input = json_decode(file_get_contents('php://input'), true);
-$htmlContent = $input['html'] ?? '';
-$cssContent = $input['css'] ?? '';
+$htmlData = $input['html'] ?? '';
+$cssData = $input['css'] ?? '';
 $bannerId = $input['bannerId'] ?? '';
 //JSON 데이터 예시
 // {
@@ -58,7 +58,7 @@ $bannerId = $input['bannerId'] ?? '';
 
 
 // 페이지 업데이트 
-$updateResult = updatePageContent($bannerId, $htmlContent, $cssContent);
+$updateResult = updatePageContent($bannerId, $htmlData, $cssData);
 
 if ($updateResult)
 {
@@ -70,7 +70,7 @@ else
 }
 
 // //TODO: id에 맞는 폴더/파일/템플릿파일 있는지 확인하고 없으면 예외/응답처리
-function updatePageContent($bannerId, $htmlContent, $cssContent)
+function updatePageContent($bannerId, $htmlData, $cssData)
 {
     $tempDir = __DIR__ . "/../temp/";
     $adsTemplatesDir = __DIR__ . "/../../aasApiConfig/templates/";
@@ -80,17 +80,15 @@ function updatePageContent($bannerId, $htmlContent, $cssContent)
 
     $htmlTemplateFilePath = $adsTemplatesDir . "template-$bannerId/template-$bannerId.html";
 
-    // HTML 파일 로드
+    // HTML 템플릿 파일 로드
     $doc = new DOMDocument();
     @$doc->loadHTMLFile($htmlTemplateFilePath, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
 
-    // HTML 콘텐츠와 CSS 콘텐츠의 JS 제거
-    $sanitizedHtml = sanitizeContent($htmlContent);
-    $sanitizedCss = sanitizeContent($cssContent);
 
-    // <head>와 <body>에 각각 CSS,JS 링크 추가
-    AppendCssLinkToHtmlHead($bannerId, $timestamp, $doc);
-    AppendJsLinkToHtmlBody($bannerId, $timestamp, $doc, $doc->getElementsByTagName('body')->item(0));
+    // HTML 콘텐츠와 CSS 콘텐츠의 JS 사용키워드 제거
+    $sanitizedHtml = sanitizeHtml($htmlData);
+    $sanitizedCss = sanitizeCSS($cssData);
+
 
     // <body> 내용 교체
     $newDoc = new DOMDocument();
@@ -103,6 +101,10 @@ function updatePageContent($bannerId, $htmlContent, $cssContent)
         $node = $doc->importNode($node, true);
         $body->appendChild($node);
     }
+
+    // <head>와 <body>에 각각 CSS,JS 링크 추가
+    AppendCssLinkToHtmlHead($bannerId, $timestamp, $doc);
+    AppendJsLinkToHtmlBody($bannerId, $timestamp, $doc, $doc->getElementsByTagName('body')->item(0));
 
     // CSS와 JS 파일 저장 및 HTML 파일 저장
     SaveCssToTemp($bannerId, $sanitizedCss, $tempDir);
@@ -199,9 +201,23 @@ function AppendJsLinkToHtmlBody($bannerId, $timestamp, $doc, $body)
     $body->appendChild($scriptLink);
 }
 
-function sanitizeContent($content)
+
+function sanitizeHtml($content)
 {
-    // JS 코드 제거
-    //TODO: 테스트 필요
-    return preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', "", $content);
+    // <script> 태그 및 그 내용 제거
+    $content = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', "", $content);
+    // 위험할 수 있는 HTML 속성 제거 (예: onclick, onerror 등)
+    $content = preg_replace('/ on\w+="[^"]*"/', '', $content);
+    $content = preg_replace('/ on\w+=\'[^\']*\'/', '', $content);
+    return $content;
+}
+
+
+function sanitizeCSS($cssContent)
+{
+    // URL 사용 제한 (옵션에 따라)
+    $cssContent = preg_replace('/url\([^)]*\)/i', '', $cssContent);
+    // 위험한 속성 및 키워드 제거
+    $cssContent = preg_replace('/expression\(|javascript:/i', '', $cssContent);
+    return $cssContent;
 }
