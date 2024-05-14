@@ -8,6 +8,9 @@ $title = "AAS 광고노출 페이지";
 
 <head>
     <title> <?= $title ?> </title>
+    <!-- 예제페이지 검색 크롤링 금지 설정 -->
+    <meta name="robots" content="noindex, nofollow" />
+    
     <style>
         .test {
             background-color: bisque;
