@@ -66,11 +66,139 @@ else
 }
 
 // 페이지 업데이트 함수
+// function updatePageContent($bannerId, $htmlData, $cssData)
+// {
+//     EmptyTempDir();
+//     $timestamp = time(); // CSS와 HTML 쿼리스트링으로 붙일 버전 번호
+
+//     $htmlTemplateFilePath = ADS_TEMPLATES_DIR . "template-$bannerId/template-$bannerId.html";
+
+//     // HTML 템플릿 파일 로드
+//     $templateHtmlDoc = file_get_html($htmlTemplateFilePath);
+//     if (!$templateHtmlDoc)
+//     {
+//         error_log("Failed to load HTML template file: $htmlTemplateFilePath");
+//         return false;
+//     }
+
+//     // HTML 데이터 확인 (서버 php로그파일에 기록 디버깅용)
+//     error_log("Sanitized HTML Data: " . $htmlData);
+
+//     // <body> 내용 교체
+//     $newDocFromData = str_get_html($htmlData);
+//     if (!$newDocFromData)
+//     {
+//         error_log("Failed to parse sanitized HTML data");
+//         return false;
+//     }
+
+//     $body = $templateHtmlDoc->find('body', 0);
+//     if ($body)
+//     {
+//         $body->innertext = $newDocFromData->innertext;
+//     }
+//     else
+//     {
+//         error_log("Failed to find body in template HTML");
+//         return false;
+//     }
+
+//     // <head>와 <body>에 각각 CSS,JS 링크 추가
+//     AppendCssLinkToHtmlHead($bannerId, $timestamp, $templateHtmlDoc);
+//     AppendJsLinkToHtmlBody($bannerId, $timestamp, $templateHtmlDoc, $body);
+
+//     // CSS와 JS 파일 저장 및 HTML 파일 저장
+//     SaveCssToTemp($bannerId, $cssData);
+//     copyJsFileToTemp($bannerId);
+//     SaveHtmlToTemp($templateHtmlDoc);
+
+//     // 목적지 폴더 비우기 및 임시 폴더의 모든 내용을 목적지 폴더로 이동
+//     EmptyDestinationDir($bannerId);
+//     MoveTempToDestination($bannerId);
+//     EmptyTempDir();
+
+//     return true;
+// }
+
+// function EmptyTempDir()
+// {
+//     array_map('unlink', glob(TEMP_DIR . "*"));
+// }
+
+// function EmptyDestinationDir($bannerId)
+// {
+//     $files = glob(BANNERS_DIR . "template-$bannerId/*");
+//     foreach ($files as $file)
+//     {
+//         unlink($file);
+//     }
+// }
+
+// function AppendCssLinkToHtmlHead($bannerId, $timestamp, $doc)
+// {
+//     $head = $doc->find('head', 0);
+//     if ($head)
+//     {
+//         $styleLink = $doc->createElement('link');
+//         $styleLink->setAttribute('rel', 'stylesheet');
+//         $styleLink->setAttribute('type', 'text/css');
+//         $styleLink->setAttribute('href', "templateStyle-$bannerId.css?v=$timestamp");
+//         $head->appendChild($styleLink);
+//     }
+// }
+
+// function SaveCssToTemp($bannerId, $sanitizedCss)
+// {
+//     $cssFileTempPath = TEMP_DIR . "templateStyle-$bannerId.css";
+
+//     // temp폴더에 CSS 파일 생성
+//     file_put_contents($cssFileTempPath, $sanitizedCss);
+// }
+
+// function SaveHtmlToTemp($doc)
+// {
+//     $doc->save(TEMP_DIR . "index.html");
+// }
+
+// function MoveTempToDestination($bannerId)
+// {
+//     $sourceFiles = glob(TEMP_DIR . '*');
+//     foreach ($sourceFiles as $file)
+//     {
+//         $destPath = BANNERS_DIR . "template-$bannerId/" . basename($file);
+//         if (!file_exists(dirname($destPath)))
+//         {
+//             mkdir(dirname($destPath), 0777, true);
+//         }
+//         rename($file, $destPath);
+//     }
+// }
+
+// function copyJsFileToTemp($bannerId)
+// {
+//     $jsFilePath = ADS_TEMPLATES_DIR . "template-$bannerId/template-$bannerId.js";
+//     $jsFileTempPath = TEMP_DIR . "template-$bannerId.js";
+
+//     if (file_exists($jsFilePath))
+//     {
+//         copy($jsFilePath, $jsFileTempPath);
+//     }
+// }
+
+// function AppendJsLinkToHtmlBody($bannerId, $timestamp, $doc, $body)
+// {
+//     $scriptLink = $doc->createElement('script');
+//     $scriptLink->setAttribute('src', "template-$bannerId.js?v=$timestamp");
+//     $body->appendChild($scriptLink);
+// }
+
 function updatePageContent($bannerId, $htmlData, $cssData)
 {
+    // 임시 디렉토리 비우기
     EmptyTempDir();
     $timestamp = time(); // CSS와 HTML 쿼리스트링으로 붙일 버전 번호
 
+    // 템플릿 HTML 파일 경로
     $htmlTemplateFilePath = ADS_TEMPLATES_DIR . "template-$bannerId/template-$bannerId.html";
 
     // HTML 템플릿 파일 로드
@@ -81,7 +209,7 @@ function updatePageContent($bannerId, $htmlData, $cssData)
         return false;
     }
 
-    // HTML 데이터 확인 (서버 php로그파일에 기록 디버깅용)
+    // HTML 파싱 확인 (디버깅용)
     error_log("Sanitized HTML Data: " . $htmlData);
 
     // <body> 내용 교체
@@ -103,7 +231,7 @@ function updatePageContent($bannerId, $htmlData, $cssData)
         return false;
     }
 
-    // <head>와 <body>에 각각 CSS,JS 링크 추가
+    // <head>와 <body>에 각각 CSS, JS 링크 추가
     AppendCssLinkToHtmlHead($bannerId, $timestamp, $templateHtmlDoc);
     AppendJsLinkToHtmlBody($bannerId, $timestamp, $templateHtmlDoc, $body);
 
@@ -112,9 +240,19 @@ function updatePageContent($bannerId, $htmlData, $cssData)
     copyJsFileToTemp($bannerId);
     SaveHtmlToTemp($templateHtmlDoc);
 
+    // 디버깅: 임시 디렉토리 내용 확인
+    $tempFiles = glob(TEMP_DIR . '*');
+    error_log("Temp directory files: " . implode(", ", $tempFiles));
+
     // 목적지 폴더 비우기 및 임시 폴더의 모든 내용을 목적지 폴더로 이동
     EmptyDestinationDir($bannerId);
     MoveTempToDestination($bannerId);
+
+    // 디버깅: 목적지 디렉토리 내용 확인
+    $destFiles = glob(BANNERS_DIR . "template-$bannerId/*");
+    error_log("Destination directory files: " . implode(", ", $destFiles));
+
+    // 임시 디렉토리 비우기
     EmptyTempDir();
 
     return true;
@@ -191,6 +329,16 @@ function AppendJsLinkToHtmlBody($bannerId, $timestamp, $doc, $body)
     $scriptLink->setAttribute('src', "template-$bannerId.js?v=$timestamp");
     $body->appendChild($scriptLink);
 }
+
+
+
+
+
+
+
+
+
+
 
 /** JS 태그와 onClick()함수등을 제거한다. */
 function sanitizeHtml($htmlData)
