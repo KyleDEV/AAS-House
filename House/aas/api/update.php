@@ -1,8 +1,8 @@
 <?php
 require_once '../../aasLib/vendor/autoload.php';
-require_once '../../aasLib/vendor/simplehtmldom/simplehtmldom/simple_html_dom.php';
 require_once '../../aasApiConfig/includes/apiCommon.php';
-
+// composer로 설치한 simple_html_dom 라이브러리가 왜인지 autoload 되지 않아서 직접링크.
+require_once '../../aasLib/vendor/simplehtmldom/simplehtmldom/simple_html_dom.php';
 
 use \Firebase\JWT\JWT;
 use Firebase\JWT\Key;
@@ -51,9 +51,10 @@ error_log("HTML Data: " . $htmlData);
 
 // 불필요한 태그 제거 및 <body> 내부 내용만 추출
 $sanitizedHtml = sanitizeHtml($htmlData);
+$sanitizedCss = sanitizeCSS($cssData);
 
 // 페이지 업데이트 
-$updateResult = updatePageContent($bannerId, $sanitizedHtml, $cssData);
+$updateResult = updatePageContent($bannerId, $sanitizedHtml, $sanitizedCss);
 
 if ($updateResult)
 {
