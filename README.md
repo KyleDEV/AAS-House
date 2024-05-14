@@ -2,19 +2,25 @@
 광고를 노출하는 웹사이트 쪽(House)의 PHP 구현코드입니다. AAS는 자바스크립트 위험요소가 제거된 광고서버 운용을 위함입니다.
 
 ## 필요 디렉토리와 파일
-라이브서버에는 다음 디렉토리와 그 하위 파일들을 root에 포함해야합니다.
-* aas - 퍼블릭에 공개되어야할 디렉토리
-* aasApiConfig - private key가 있는 설정파일 포함 (비공개)
-* aasLib -  PHP 라이브러리 폴더 (비공개)
+`House`폴더에는 아래의 세 디렉토리가 있습니다. 라이브서버에는 다음 디렉토리와 그 하위 파일들을 root에 포함해야합니다.
 
-디렉토리를 변경하거나 다른 경로를 사용하려면 aasApiConfig/includes/apiCommon.php 의 define() 코드와 aasExample/aasInsertIframe.js 의 $iframeSrc 코드를 수정하여 사용하십시오.
+* aas - 공개되어야할 디렉토리
+* aasApiConfig - private key가 있는 설정파일 포함 (비공개)
+* aasLib -  PHP 라이브러리 관리 폴더 (비공개)
+
+디렉토리를 변경하거나 다른 경로를 사용하려면 다음위치의 코드를 수정해 사용하십시오. 
+* `aasApiConfig/includes/apiCommon.php`에서 DIR에 대한 define() 코드
+* `aasExample/aasInsertIframe.js` 의 `$iframeSrc` 경로
+* `aas/api` 디렉토리 안 php파일들의 `require_once` 경로
 
 ## 써드파티 라이브러리 설치사용 안내
+써드파티 PHP 라이브러리를 사용중입니다. 
+* firebase/JWT 
 
-adsLib 폴더안에는 firebase/JWT 패키지가 필요합니다.
+adsLib/ 폴더안에는 composer, firebase, autoload.php 등이 필요합니다. 다음 방법으로 설치가능합니다.
 
-### A) php composer로 설치:
-터미널에서 adsLib 폴더안으로 이동해 아래의 composer 명령어를 입력하세요. 
+### A) php composer로 설치 및 관리:
+터미널에서 cd 명령어로 adsLib 폴더안으로 이동해 아래의 composer 명령어를 입력하세요. 
 
 `composer install`
 
@@ -31,34 +37,37 @@ require_once '../../path/to/firebase/php-jwt/src/Key.php';
 adsApiConfig, adsLib 디렉토리의 파일은 웹사이트 방문자가 접근할 수 없어야 합니다. 웹서버 설정을 확인하세요.(Apache 일 경우 이미 각 디렉토리에 .htaccess 파일과 'Deny from all' 설정이 되어있습니다.)
 
 ## API 시크릿 설정
-adsApiConfig/config.sample.json 파일에 양식이 있습니다. 이 양식대로 같은 폴더에 config.json 파일을 별도로 만들어 이곳에서 JWT토큰발급을 위한 key와 요청 user/비밀번호를 세팅해 사용해야합니다.
+adsApiConfig/config.sample.json 파일에 양식이 있습니다. 이 양식대로 같은 폴더에 config.json 파일을 별도로 생성해야합니다. 이 파일 내용에 JWT토큰발급을 위한 key와 요청 user/비밀번호를 작성해 사용해야합니다.
 
 * config.sample.json 양식은 git 추적이 됩니다. 이 파일에 비밀정보를 넣지 마십시오. 
-* config.json은 .gitignore에 명시하여 추적되지 않게 설정, user/password와 JWT secret key가 외부에 노출되지 않도록 해야합니다.
+* config.json은 .gitignore에 명시하여 추적되지 않게 되어있습니다. user/password와 JWT secret key가 외부에 노출되지 않도록 해야합니다.
 
 ## API Endpoints
 다음 두 엔드포인트를 사용할 수 있습니다.
-* /aas/api/token.php
-* /aas/api/update.php
+* /aas/api/token.php (토큰 발급 엔드포인트)
+* /aas/api/update.php (광고배너 업데이트 요청 엔드포인트)
 
 요청측(광고서버)에서는 사전에 발급받은 user,password를 통해 token.php로 JWT 토큰을 받아야합니다. 이 토큰은 유효기간이 있습니다.
 
-수신측이 노출중인 광고위젯의 광고배너를 변경하려면 사전에 정해진 광고(HTML/CSS) 템플릿을 JSON과 함께 요청측이 update.php에 요청합니다.
+수신측이 노출중인 광고위젯의 광고배너를 변경하려면 사전에 정해진 광고(HTML/CSS) 템플릿을 JSON과 함께 요청측이 /aas/api/update.php 엔드포인트에 요청합니다.
 
 ### 요청측(광고서버) API 사용 프로세스
 * 1) JWT 퍼블릭 토큰 요청:
     * 요청자는  /aas/api/token.php 주소로 user,password 와 함께 POST 요청하면 JWT 토큰을 받을 수 있습니다.  이 토큰은 유효기간이 있습니다.
 * 2) /aas/api/update.php 주소로 JWT 토큰과 함께  사전에 정해진 광고(HTML/CSS) 템플릿을 JSON 데이터로 전송하면 House의 노출페이지의 광고배너 변경이 즉시 반영됩니다.
 
+      #### JSON 포맷 예시:
+      ~~~
+      {
+        "bannerId": "banner123",
+        "html": "<div>Welcome to our Website!</div>",
+        "css": "div { border: 1px solid #000; padding: 10px; }"
+      }
+      ~~~
 
-### JSON 포맷 예시
-~~~
-{
-  "bannerId": "banner123",
-  "html": "<div>Welcome to our Website!</div>",
-  "css": "div { border: 1px solid #000; padding: 10px; }"
-}
-~~~
+
+
+
 
 ## templateDesign 폴더
 templateDesign 폴더는 서버에 사용되지 않는 폴더입니다. 광고배너를 디자인하고 테스트하는데 사용하기위한 단순 참고 파일입니다. 
@@ -73,11 +82,18 @@ jsonConverter.html 파일을 실행해서 API 엔드포인트에 요청하기위
 
 
 
-## House 광고 노출
-aas/example.php 파일은 광고를 노출하는 페이지 예시 파일입니다.
+## House 광고 노출 설정
 
-노출 페이지에는  aasInsertIframe.js 스크립트가 추가되어야합니다. 
+## 예제 파일
+aasExample 폴더는 광고를 노출하는 페이지에대한 얘시이며 안에는 다음 두가지 파일이 존재합니다.
 
+* index.php -  광고노출 페이지 예제 파일
+* aasInsertIframe.js - 광고노출 페이지에 추가되어야 할 스크립트입니다.
+
+예시페이지의 동작을 보고 싶다면 aasExample 폴더를 사이트의 root에 복사해 넣으면
+도메인/aasExample/ 주소로 확인할 수 있습니다.
+
+## 예제 파일의 광고노출 방식
 
 사이트의 위젯 컨테이너(사이드바 등)에 다음처럼 `.assSpace` 클래스를 가진 광고위젯을 추가합니다.
 
@@ -88,7 +104,8 @@ aas/example.php 파일은 광고를 노출하는 페이지 예시 파일입니�
 ~~~
 사이트의 main css에서 `.site-widget-container`에 대한 높이나 지정하여 사용하거나 `.aasSpace`의 고정높이를 명시하여 사용하십시오.
 
-aasInsertIframe.js 스크립트는 페이지에 존재하는 모든 `.aasSpace` 태그를 찾아 `data-template="template-1"`에 맞는 template-ID에 맞는 `광고배너`를 iframe으로 추가합니다.
+aasInsertIframe.js 스크립트는 페이지에 존재하는 모든 `.aasSpace` 태그를 찾아 `data-template="1"`에 쓰여진 숫자에 맞추어 template-ID에 맞는 `광고배너`를 iframe으로 추가합니다.
+
 
 
 

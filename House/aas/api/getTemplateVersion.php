@@ -1,5 +1,5 @@
 <?php
-
+require_once '../../aasApiConfig/includes/apiCommon.php';
 /*********
  * aasInsertIframe.js의 Ajax 요청에 응답하는 GET. 
  * /aas/pages/tempalte-x/index.html 파일의 최종수정시간을 반환한다.
@@ -10,14 +10,14 @@
 $templateId = isset($_GET['templateId']) ? $_GET['templateId'] : null;
 
 // 템플릿 파일 경로 설정
-$templateFilePath = __DIR__ . "/../aas/banners/template-$templateId/index.html";
+$bannerFilePath = BANNERS_DIR . "template-$templateId/index.html";
 
 
 
 // 파일의 존재 여부 및 수정 시간 체크해서 존재하면 마지막 수정시간을, 존재하지 않으면 현재시간 반환.
-if (file_exists($templateFilePath))
+if (file_exists($bannerFilePath))
 {
-    $lastModified = filemtime($templateFilePath);
+    $lastModified = filemtime($bannerFilePath);
 }
 else
 {
