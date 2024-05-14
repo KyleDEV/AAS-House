@@ -10,7 +10,7 @@ $title = "AAS 광고노출 페이지";
     <title> <?= $title ?> </title>
     <!-- 예제페이지 검색 크롤링 금지 설정 -->
     <meta name="robots" content="noindex, nofollow" />
-    
+
     <style>
         .test {
             background-color: bisque;
@@ -27,14 +27,16 @@ $title = "AAS 광고노출 페이지";
     </style>
 </head>
 
-<body>
-    <div class="site-widget-container">
-        <!-- AAS 광고 위젯 template-1 -->
-        <div class="aasSpace" style="height: 100%;" data-template="1"></div>
-    </div>
+    <body>
+        <div class="site-widget-container">
+            <!-- AAS 광고 위젯 -->
+            <div class="aasSpace" data-template="1" style="height: 200px; background-color: aquamarine;">
+                <!-- aasInsertIframe.js에 의해 iframe 이 들어갈 자리 -->
+            </div>
+        </div>
 
-    <!-- .aasSpace 요소의  data-template에 맞는 aas 광고페이지를 iframe에 감싸서 .aasSpace의 innerHTL로 넣는 자바스크립트-->
-    <script src="aasInsertIframe.js?v=202405128"></script>
-</body>
-
+        <!-- 페이지내의 모든 .aasSpace 요소를 찾고 
+        data-template ID에 해당하는 광고배너페이지를 iframe에 감싸서 .aasSpace의 innerHTL로 넣는 자바스크립트-->
+        <script src="aasInsertIframe.js?v=202405128"></script>
+    </body>
 </html>
