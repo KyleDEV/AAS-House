@@ -1,7 +1,8 @@
 <?php
 require_once '../../aasLib/vendor/autoload.php';
-require_once '../../aasApiConfig/includes/apiCommon.php';
 require_once '../../aasLib/vendor/simplehtmldom/simplehtmldom/simple_html_dom.php';
+require_once '../../aasApiConfig/includes/apiCommon.php';
+
 
 use \Firebase\JWT\JWT;
 use Firebase\JWT\Key;
@@ -45,14 +46,14 @@ $htmlData = $input['html'] ?? '';
 $cssData = $input['css'] ?? '';
 $bannerId = $input['bannerId'] ?? '';
 
-// HTML 데이터 확인 (디버깅용)
+// HTML 데이터 확인 (서버 php로그파일에 기록 디버깅용)
 error_log("HTML Data: " . $htmlData);
 
-// <body> 태그 추가
-$htmlDataWithBody = "<body>$htmlData</body>";
+// 불필요한 태그 제거 및 <body> 내부 내용만 추출
+$sanitizedHtml = sanitizeHtml($htmlData);
 
 // 페이지 업데이트 
-$updateResult = updatePageContent($bannerId, $htmlDataWithBody, $cssData);
+$updateResult = updatePageContent($bannerId, $sanitizedHtml, $cssData);
 
 if ($updateResult)
 {
@@ -79,32 +80,21 @@ function updatePageContent($bannerId, $htmlData, $cssData)
         return false;
     }
 
-    // HTML 콘텐츠와 CSS 콘텐츠의 JS 사용키워드 제거
-    $sanitizedHtml = sanitizeHtml($htmlData);
-    $sanitizedCss = sanitizeCSS($cssData);
-
-    // HTML 파싱 확인 (디버깅용)
-    error_log("Sanitized HTML Data: " . $sanitizedHtml);
+    // HTML 데이터 확인 (서버 php로그파일에 기록 디버깅용)
+    error_log("Sanitized HTML Data: " . $htmlData);
 
     // <body> 내용 교체
-    $newDocFromData = str_get_html($sanitizedHtml);
+    $newDocFromData = str_get_html($htmlData);
     if (!$newDocFromData)
     {
         error_log("Failed to parse sanitized HTML data");
         return false;
     }
 
-    $newBodyFromData = $newDocFromData->find('body', 0);
-    if (!$newBodyFromData)
-    {
-        error_log("Failed to find body in new HTML data");
-        return false;
-    }
-
     $body = $templateHtmlDoc->find('body', 0);
     if ($body)
     {
-        $body->innertext = $newBodyFromData->innertext;
+        $body->innertext = $newDocFromData->innertext;
     }
     else
     {
@@ -117,7 +107,7 @@ function updatePageContent($bannerId, $htmlData, $cssData)
     AppendJsLinkToHtmlBody($bannerId, $timestamp, $templateHtmlDoc, $body);
 
     // CSS와 JS 파일 저장 및 HTML 파일 저장
-    SaveCssToTemp($bannerId, $sanitizedCss);
+    SaveCssToTemp($bannerId, $cssData);
     copyJsFileToTemp($bannerId);
     SaveHtmlToTemp($templateHtmlDoc);
 
@@ -204,12 +194,29 @@ function AppendJsLinkToHtmlBody($bannerId, $timestamp, $doc, $body)
 /** JS 태그와 onClick()함수등을 제거한다. */
 function sanitizeHtml($htmlData)
 {
-    // <script> 태그 및 그 내용 제거
-    $SanitizedContent = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', "", $htmlData);
+    // <script>, <style>, <html>, <head>, <body> 태그와 그 내용을 제거
+    $sanitizedContent = preg_replace('/<(script|style|html|head|body)\b[^>]*>(.*?)<\/(script|style|html|head|body)>/is', "", $htmlData);
+
+    // <body> 태그가 있는 경우 그 내부 내용만 추출
+    $htmlDom = str_get_html($htmlData);
+    if ($htmlDom)
+    {
+        $body = $htmlDom->find('body', 0);
+        if ($body)
+        {
+            $sanitizedContent = $body->innertext;
+        }
+        else
+        {
+            $sanitizedContent = $htmlDom->innertext;
+        }
+    }
+
     // 위험할 수 있는 HTML 속성 제거 (onclick, onerror 등)
-    $SanitizedContent = preg_replace('/ on\w+="[^"]*"/', '', $SanitizedContent);
-    $SanitizedContent = preg_replace('/ on\w+=\'[^\']*\'/', '', $SanitizedContent);
-    return $SanitizedContent;
+    $sanitizedContent = preg_replace('/ on\w+="[^"]*"/', '', $sanitizedContent);
+    $sanitizedContent = preg_replace('/ on\w+=\'[^\']*\'/', '', $sanitizedContent);
+
+    return $sanitizedContent;
 }
 
 /** \<script\>와 같은 HTML 태그나 javascript: 와 같은 프로토콜을 사용한 URL이 포함되지 않도록 필터링  */
