@@ -1,7 +1,8 @@
 <?php
 require_once '../../aasLib/vendor/autoload.php';
 require_once '../../aasApiConfig/includes/apiCommon.php';
-//TODO: 응답코드. 분류별 에러코드 응답하도록 변경하기? http 응답코드로 충분하나?
+require_once '../../aasLib/vendor/simplehtmldom/simplehtmldom/simple_html_dom.php';
+
 use \Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
@@ -38,23 +39,20 @@ catch (Exception $e)
 
 // 인증 성공
 
-
-
 // HTML과 CSS 데이터 처리
 $input = json_decode(file_get_contents('php://input'), true);
 $htmlData = $input['html'] ?? '';
 $cssData = $input['css'] ?? '';
 $bannerId = $input['bannerId'] ?? '';
-//JSON 데이터 예시
-// {
-//   "html": "<div style='background-color: #f0f0f0; text-align: center; padding: 20px;'>Welcome to our Website!</div>",
-//   "css": "div { border: 1px solid #000; padding: 10px; }",
-//   "bannerId": "banner123"
-// }
 
+// HTML 데이터 확인 (디버깅용)
+error_log("HTML Data: " . $htmlData);
+
+// <body> 태그 추가
+$htmlDataWithBody = "<body>$htmlData</body>";
 
 // 페이지 업데이트 
-$updateResult = updatePageContent($bannerId, $htmlData, $cssData);
+$updateResult = updatePageContent($bannerId, $htmlDataWithBody, $cssData);
 
 if ($updateResult)
 {
@@ -65,7 +63,7 @@ else
     echo json_encode(['success' => false, 'message' => '실패!(Failed to update content).'], JSON_UNESCAPED_UNICODE);
 }
 
-// //TODO: id에 맞는 폴더/파일/템플릿파일 있는지 확인하고 없으면 예외/응답처리
+// 페이지 업데이트 함수
 function updatePageContent($bannerId, $htmlData, $cssData)
 {
     EmptyTempDir();
@@ -74,30 +72,49 @@ function updatePageContent($bannerId, $htmlData, $cssData)
     $htmlTemplateFilePath = ADS_TEMPLATES_DIR . "template-$bannerId/template-$bannerId.html";
 
     // HTML 템플릿 파일 로드
-    $templateHtmlDoc = new DOMDocument();
-    @$templateHtmlDoc->loadHTMLFile($htmlTemplateFilePath, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-
+    $templateHtmlDoc = file_get_html($htmlTemplateFilePath);
+    if (!$templateHtmlDoc)
+    {
+        error_log("Failed to load HTML template file: $htmlTemplateFilePath");
+        return false;
+    }
 
     // HTML 콘텐츠와 CSS 콘텐츠의 JS 사용키워드 제거
     $sanitizedHtml = sanitizeHtml($htmlData);
     $sanitizedCss = sanitizeCSS($cssData);
 
+    // HTML 파싱 확인 (디버깅용)
+    error_log("Sanitized HTML Data: " . $sanitizedHtml);
 
-    // <body> 내용 교체.
-    $newDocFromData = new DOMDocument();
-    @$newDocFromData->loadHTML(mb_convert_encoding($sanitizedHtml, 'HTML-ENTITIES', 'UTF-8'));
-    $newBodyFromData = $newDocFromData->getElementsByTagName('body')->item(0);
-
-    $body = $templateHtmlDoc->getElementsByTagName('body')->item(0);
-    foreach ($newBodyFromData->childNodes as $node)
+    // <body> 내용 교체
+    $newDocFromData = str_get_html($sanitizedHtml);
+    if (!$newDocFromData)
     {
-        $node = $templateHtmlDoc->importNode($node, true);
-        $body->appendChild($node);
+        error_log("Failed to parse sanitized HTML data");
+        return false;
+    }
+
+    $newBodyFromData = $newDocFromData->find('body', 0);
+    if (!$newBodyFromData)
+    {
+        error_log("Failed to find body in new HTML data");
+        return false;
+    }
+
+    $body = $templateHtmlDoc->find('body', 0);
+    if ($body)
+    {
+        $body->innertext = $newBodyFromData->innertext;
+    }
+    else
+    {
+        error_log("Failed to find body in template HTML");
+        return false;
     }
 
     // <head>와 <body>에 각각 CSS,JS 링크 추가
     AppendCssLinkToHtmlHead($bannerId, $timestamp, $templateHtmlDoc);
-    AppendJsLinkToHtmlBody($bannerId, $timestamp, $templateHtmlDoc, $templateHtmlDoc->getElementsByTagName('body')->item(0));
+    AppendJsLinkToHtmlBody($bannerId, $timestamp, $templateHtmlDoc, $body);
 
     // CSS와 JS 파일 저장 및 HTML 파일 저장
     SaveCssToTemp($bannerId, $sanitizedCss);
@@ -111,16 +128,6 @@ function updatePageContent($bannerId, $htmlData, $cssData)
 
     return true;
 }
-
-
-
-
-
-
-
-
-
-
 
 function EmptyTempDir()
 {
@@ -138,12 +145,15 @@ function EmptyDestinationDir($bannerId)
 
 function AppendCssLinkToHtmlHead($bannerId, $timestamp, $doc)
 {
-    $head = $doc->getElementsByTagName('head')->item(0);
-    $styleLink = $doc->createElement('link');
-    $styleLink->setAttribute('rel', 'stylesheet');
-    $styleLink->setAttribute('type', 'text/css');
-    $styleLink->setAttribute('href', "templateStyle-$bannerId.css?v=$timestamp");
-    $head->appendChild($styleLink);
+    $head = $doc->find('head', 0);
+    if ($head)
+    {
+        $styleLink = $doc->createElement('link');
+        $styleLink->setAttribute('rel', 'stylesheet');
+        $styleLink->setAttribute('type', 'text/css');
+        $styleLink->setAttribute('href', "templateStyle-$bannerId.css?v=$timestamp");
+        $head->appendChild($styleLink);
+    }
 }
 
 function SaveCssToTemp($bannerId, $sanitizedCss)
@@ -156,7 +166,7 @@ function SaveCssToTemp($bannerId, $sanitizedCss)
 
 function SaveHtmlToTemp($doc)
 {
-    $doc->saveHTMLFile(TEMP_DIR . "index.html");
+    $doc->save(TEMP_DIR . "index.html");
 }
 
 function MoveTempToDestination($bannerId)
@@ -173,8 +183,6 @@ function MoveTempToDestination($bannerId)
     }
 }
 
-
-// JavaScript 파일을 Temp 디렉토리로 복사하는 함수
 function copyJsFileToTemp($bannerId)
 {
     $jsFilePath = ADS_TEMPLATES_DIR . "template-$bannerId/template-$bannerId.js";
@@ -186,7 +194,6 @@ function copyJsFileToTemp($bannerId)
     }
 }
 
-// HTML 문서에 JavaScript 링크를 추가하는 함수
 function AppendJsLinkToHtmlBody($bannerId, $timestamp, $doc, $body)
 {
     $scriptLink = $doc->createElement('script');
@@ -194,7 +201,7 @@ function AppendJsLinkToHtmlBody($bannerId, $timestamp, $doc, $body)
     $body->appendChild($scriptLink);
 }
 
-/** JS 태그와  onClick()함수등을 제거한다. */
+/** JS 태그와 onClick()함수등을 제거한다. */
 function sanitizeHtml($htmlData)
 {
     // <script> 태그 및 그 내용 제거
