@@ -46,9 +46,9 @@ AAS는 javascript 위험요소가 제거된 광고 운용하는 컨셉트의 Adv
 > #### A) php composer로 설치하려면
 >
 > 터미널에서 cd 명령어로 `adsLib` 폴더안으로 이동해 아래의 composer 명령어를 입력하세요. 
-    > ~~~
-    > composer install
-    > ~~~
+> ~~~
+> composer install
+> ~~~
 >
 > 공유된 프로젝트에 사용된 버전--`composer.json` 파일에 명시된 패키지와 그 버전--그대로 설치됩니다.
 
@@ -57,10 +57,10 @@ AAS는 javascript 위험요소가 제거된 광고 운용하는 컨셉트의 Adv
 > `adsLib/vendor/` 하위에 각 라이브러리 패키지를 추가하십시오. 
 > 
 > autoload 없이 직접포함하여 사용하려면 `aas/api/token.php`와 `update.php` 의 `require_once` 코드를 다음과 같은 방식으로 추가해야합니다.
-    > ~~~
-    > require_once '../../path/to/firebase/php-jwt/src/JWT.php';
-    > require_once '../../path/to/firebase/php-jwt/src/Key.php';
-    > ~~~
+> ~~~
+> require_once '../../path/to/firebase/php-jwt/src/JWT.php';
+> require_once '../../path/to/firebase/php-jwt/src/Key.php';
+> ~~~
 > 각 라이브러리 버전넘버는 `composer.json` 파일에서 찾을 수 있습니다.
 
 
